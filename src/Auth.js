@@ -1,146 +1,21 @@
 
-Auth = {
-	install(Vue, options = { loginUrl: "/api/login", signupUrl: "/api/users", logoutUrl: "/api/logout"}) {
-		const LOGIN_URL = options.loginUrl;
-		const SIGNUP_URL = options.signupUrl;
-		const LOGOUT_URL = options.logoutUrl;
+const Auth = {
+	install(vue, options = { loginUrl: "/api/login", signupUrl: "/api/users", logoutUrl: "/api/logout", refresh: false}) {
+		vue.prototype.$auth = new Authenticate(vue, options.loginUrl, options.signupUrl, options.logoutUrl);
 
-		Vue.prototype.$auth = new Authenticate();
+		vue.http.interceptors.push((request, next) => {
 
-		Vue.http.interceptors.push({
-		    request: function(request) {
+	        if (!request.headers.hasOwnProperty('Authorization')) {
+	            request.headers['Authorization'] = localStorage.getItem("token");
+	        }
 
-		        var headers = request.headers;
-
-		        if (!headers.hasOwnProperty('Authorization')) {
-		            headers['Authorization'] = localStorage.getItem("token");
-		        }
-
-		        return request;
-		    }
+			if (options.refresh) {
+				next((response) => {
+					vue.$auth.setToken(response.token);
+				});
+			}
+			next();
 		});
-	}
-}
-
-class Authenticate {
-	constructor() {
-		this.authenticated = this.check();
-	}
-
-	/**
-	 * Send a post request to the LoginUrl
-	 * 
-	 * @param  {Object}  context      [description]
-	 * @param  {Object|Array}  input        [description]
-	 * @param  {String} redirect     [description]
-	 * @param  {Closure} errorHandler [description]
-	 * @return {Void}               [description]
-	 */
-	login(context, input, redirect = false, errorHandler = false) {
-		context.$http.post(LOGIN_URL, input).then((response) => {
-			this.setToken(response.data.token);
-
-			this.authenticated = true;
-
-			if (redirect !== false) {
-				context.$router.go(redirect);
-			}
-		}, (errors) => {
-			if (errorHandler !== false) {
-				errorHandler(errors);
-			}
-		});
-	}
-
-	/**
-	 * Send a post request to the SignUpUrl
-	 * 
-	 * @param  {Object}  context      [description]
-	 * @param  {Object|Array}  input
-	 * @param  {String} redirect
-	 * @param  {Closure} errorHandler
-	 * @param  {Bool} login
-	 * @return {Void}
-	 */
-	register(context, input, redirect = false, errorHandler = false, login = true) {
-		context.$http.post(SIGNUP_URL, input).then((response) => {
-			if (login) {
-				this.setToken(response.data.token);
-
-				this.authenticated = true;
-			}
-			if (redirect !== false) {
-				context.$router.go(redirect);
-			}
-		}, (errors) => {
-			if (errorHandler !== false) {
-				errorHandler(errors);
-			}
-		});
-	}
-
-	/**
-	 * Send a get request to the logout url
-	 * 
-	 * @param  {Object}  context
-	 * @param  {Boolean} redirect
-	 * @param  {Boolean} errorHandler
-	 * @return {Void}
-	 */
-	logout(context, redirect = false, errorHandler = false) {
-		context.$http.get(LOGOUT_URL).then((response) => {
-			this.removeToken();
-			this.authenticated = false;
-
-			if (redirect !== false) {
-				context.$router.go(redirect);
-			}
-		}, (errors) => {
-			if (errorHandler !== false) {
-				errorHandler(errors);
-			}
-		});
-	}
-
-	/**
-	 * Check if token exists
-	 * 
-	 * @return {Bool}
-	 */
-	check() {
-		let token = this.getToken();
-		if (typeof(token) != "undefined" && token != null) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Get token from localStorage
-	 * 
-	 * @return {String}
-	 */
-	getToken() {
-		return localStorage.getItem("token")
-	}
-	
-	/**
-	 * Set the token in the localStorage
-	 * 
-	 * @param {String}
-	 * @return {Void}
-	 */
-	setToken(token) {
-		localStorage.setItem("token", token);
-	}
-
-	/**
-	 * Remove the token from the localStorage
-	 * 
-	 * @return {Void}
-	 */
-	removeToken() {
-		localStorage.removeItem("token")
 	}
 }
 
@@ -150,4 +25,85 @@ if (typeof exports == "object") {
 } else if (window.Vue) {
 	// Vue use if vue is being used on the page
 	Vue.use(Auth);
+}
+
+class Authenticate {
+	constructor(context, loginUrl, signupUrl, logoutUrl, logoutUrl) {
+		this.authenticated = this.check();
+		this.loginUrl = loginUrl;
+		this.signupUrl = signupUrl;
+		this.logoutUrl = logoutUrl;
+		this.context = context;
+	}
+
+	login(context, input, redirect = false, errorHandler = false) {
+		this.context.$http.post(this.loginUrl, input).then((response) => {
+			this.setToken(response.data.token);
+
+			this.authenticated = true;
+
+			redirect(this.context, redirect);
+
+		}, handleErrors(errorHandler));
+	}
+
+	register(context, input, redirect = false, errorHandler = false, login = true) {
+		this.context.$http.post(this.signupUrl, input).then((response) => {
+			if (login) {
+				this.setToken(response.data.token);
+
+				this.authenticated = true;
+			}
+			redirect(this.context, redirect);
+
+		}, handleErrors(errorHandler));
+	}
+
+	logout(context, redirect = false, errorHandler = false) {
+		this.context.$http.get(this.logoutUrl).then((response) => {
+			this.removeToken();
+
+			this.authenticated = false;
+
+			redirect(this.context, redirect);
+
+		}, handleErrors(errorHandler));
+	}
+
+	check() {
+		validToken(this.getToken());
+	}
+
+	getToken() {
+		return localStorage.getItem("token")
+	}
+
+	setToken(token) {
+		localStorage.setItem("token", token);
+	}
+
+	removeToken() {
+		localStorage.removeItem("token")
+	}
+}
+
+function redirect(context, redirect) {
+	if (redirect !== false) {
+		context.$router.go(redirect);
+	}
+}
+
+function validToken(token) {
+	if (typeof token != "undefined" && token != null) {
+		return true;
+	}
+	return false;
+}
+
+function handleErrors(errorHandler) {
+	return (errors) => {
+		if (errorHandler !== false) {
+			errorHandler(errors);
+		}
+	}
 }

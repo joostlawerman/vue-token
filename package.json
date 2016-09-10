@@ -1,0 +1,26 @@
+{
+  "name": "vue-token",
+  "version": "1.0.0",
+  "description": "Simple token storage/ authorization in vuejs.",
+  "main": "src/Auth.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joostlawerman/Vue-Token.git"
+  },
+  "keywords": [
+    "vue-token",
+    "token-auth"
+  ],
+  "author": "Joost Lawerman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joostlawerman/Vue-Token/issues"
+  },
+  "homepage": "https://github.com/joostlawerman/Vue-Token#readme",
+  "devDependencies": {
+    "tern-lint": "^0.6.0"
+  }
+}

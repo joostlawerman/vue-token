@@ -1,0 +1,17 @@
+{
+  "ecmaVersion": 6,
+  "libs": [],
+  "plugins": {
+    "complete_strings": {},
+    "node": {},
+    "lint": {
+        "MixedReturnTypes": {"severity" : "none"},
+        "UnusedVariable" : {"severity" : "none"},
+        "UnknownProperty" : {"severity" : "none"},
+        "UnknownIdentifier" : {"severity" : "none"}
+    },
+    "requirejs": {},
+    "modules": {},
+    "es_modules": {}
+  }
+}
