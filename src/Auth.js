@@ -28,7 +28,7 @@ if (typeof exports == "object") {
 }
 
 class Authenticate {
-	constructor(context, loginUrl, signupUrl, logoutUrl, logoutUrl) {
+	constructor(context, loginUrl, signupUrl, logoutUrl) {
 		this.authenticated = this.check();
 		this.loginUrl = loginUrl;
 		this.signupUrl = signupUrl;
