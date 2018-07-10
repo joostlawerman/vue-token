@@ -6,6 +6,7 @@ const Auth = {
 
 	        if (!request.headers.hasOwnProperty('Authorization')) {
                 request.headers.set('Authorization', "BEARER "+localStorage.getItem("token"));
+                // BEARER is required for the jwt
             }
 
 			if (options.refresh) {
@@ -44,25 +45,25 @@ class Authenticate {
 		}, handleErrors(errorHandler));
 	}
 
-	register(context, input, redirect = false, errorHandler = false, login = true) {
+	register(context, input, destination = false, errorHandler = false, login = true) {
 		this.context.$http.post(this.signupUrl, input).then((response) => {
 			if (login) {
 				this.setToken(response.data.token);
 
 				this.authenticated = true;
 			}
-			redirect(this.context, redirect);
+			redirect(this.context, destination);
 
 		}, handleErrors(errorHandler));
 	}
 
-	logout(context, redirect = false, errorHandler = false) {
+	logout(context, destination = false, errorHandler = false) {
 		this.context.$http.get(this.logoutUrl).then((response) => {
 			this.removeToken();
 
 			this.authenticated = false;
 
-			redirect(this.context, redirect);
+			redirect(this.context, destination);
 
 		}, handleErrors(errorHandler));
 	}
