@@ -5,7 +5,7 @@ const Auth = {
 		vue.http.interceptors.push((request, next) => {
 
 	        if (!request.headers.hasOwnProperty('Authorization')) {
-                request.headers.set('Authorization', "BEARER "+localStorage.getItem("token"));
+                request.headers.set('Authorization', "Bearer "+localStorage.getItem("token"));
                 // BEARER is required for the jwt
             }
 
