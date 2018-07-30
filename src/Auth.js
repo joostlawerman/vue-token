@@ -2,12 +2,12 @@
 const Auth = {
 	install(vue, options = { loginUrl: "/api/login", signupUrl: "/api/users", logoutUrl: "/api/logout", refresh: false}) {
 		vue.prototype.$auth = new Authenticate(vue, options.loginUrl, options.signupUrl, options.logoutUrl);
-
 		vue.http.interceptors.push((request, next) => {
 
 	        if (!request.headers.hasOwnProperty('Authorization')) {
-	            request.headers['Authorization'] = localStorage.getItem("token");
-	        }
+                request.headers.set('Authorization', "Bearer "+localStorage.getItem("token"));
+                // BEARER is required for the jwt
+            }
 
 			if (options.refresh) {
 				next((response) => {
@@ -36,42 +36,40 @@ class Authenticate {
 		this.context = context;
 	}
 
-	login(context, input, redirect = false, errorHandler = false) {
-		this.context.$http.post(this.loginUrl, input).then((response) => {
+	login(context, input, destination = false, errorHandler = false) {
+		context.$http.post(this.loginUrl, input).then((response) => {
 			this.setToken(response.data.token);
-
 			this.authenticated = true;
-
-			redirect(this.context, redirect);
+			redirect(context, destination);
 
 		}, handleErrors(errorHandler));
 	}
 
-	register(context, input, redirect = false, errorHandler = false, login = true) {
+	register(context, input, destination = false, errorHandler = false, login = true) {
 		this.context.$http.post(this.signupUrl, input).then((response) => {
 			if (login) {
 				this.setToken(response.data.token);
 
 				this.authenticated = true;
 			}
-			redirect(this.context, redirect);
+			redirect(this.context, destination);
 
 		}, handleErrors(errorHandler));
 	}
 
-	logout(context, redirect = false, errorHandler = false) {
+	logout(context, destination = false, errorHandler = false) {
 		this.context.$http.get(this.logoutUrl).then((response) => {
 			this.removeToken();
 
 			this.authenticated = false;
 
-			redirect(this.context, redirect);
+			redirect(this.context, destination);
 
 		}, handleErrors(errorHandler));
 	}
 
 	check() {
-		validToken(this.getToken());
+		return validToken(this.getToken());
 	}
 
 	getToken() {
@@ -89,7 +87,7 @@ class Authenticate {
 
 function redirect(context, redirect) {
 	if (redirect !== false) {
-		context.$router.go(redirect);
+		context.$router.push({'path': redirect});
 	}
 }
 
