@@ -18,7 +18,7 @@ The token will be stored into the Authorization header with each request you mak
 		loginUrl: "/api/login", 
 		signupUrl: "/api/users", 
 		logoutUrl: "/api/logout",
-		refresh: false // Utalize the automatic refresh of tokens (it will use the token from response.token as the new token)
+		refresh: false // Utilize the automatic refresh of tokens (it will use the token from response.token as the new token)
 	}
 
 ## Example Component
